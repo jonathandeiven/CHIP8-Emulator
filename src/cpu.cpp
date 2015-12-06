@@ -1,26 +1,6 @@
 #include "cpu.h"
+#include "fontset.h"
 #include <stdio.h>
-
-// Font Set
-unsigned char fontset[80] =
-{
-    0xF0, 0x90, 0x90, 0x90, 0xF0, //0
-    0x20, 0x60, 0x20, 0x20, 0x70, //1
-    0xF0, 0x10, 0xF0, 0x80, 0xF0, //2
-    0xF0, 0x10, 0xF0, 0x10, 0xF0, //3
-    0x90, 0x90, 0xF0, 0x10, 0x10, //4
-    0xF0, 0x80, 0xF0, 0x10, 0xF0, //5
-    0xF0, 0x80, 0xF0, 0x90, 0xF0, //6
-    0xF0, 0x10, 0x20, 0x40, 0x40, //7
-    0xF0, 0x90, 0xF0, 0x90, 0xF0, //8
-    0xF0, 0x90, 0xF0, 0x10, 0xF0, //9
-    0xF0, 0x90, 0xF0, 0x90, 0x90, //A
-    0xE0, 0x90, 0xE0, 0x90, 0xE0, //B
-    0xF0, 0x80, 0x80, 0x80, 0xF0, //C
-    0xE0, 0x90, 0x90, 0x90, 0xE0, //D
-    0xF0, 0x80, 0xF0, 0x80, 0xF0, //E
-    0xF0, 0x80, 0xF0, 0x80, 0x80  //F
-};
 
 // Init registers and memory
 void Chip8::initialize() {
@@ -65,6 +45,7 @@ void Chip8::initialize() {
 	for (int i = 0; i < 80; i++) {
 		memory[i] = fontset[i];
 	}
+
 }
 
 // Load the ROM
@@ -74,10 +55,12 @@ void Chip8::load(char* rom) {
 
 // Fetch, decode, execute opcode
 void Chip8::cycle() {
+	// 4-bit Register identifiers
+	unsigned char X = (opcode&0x0F00) >> 8;
+	unsigned char Y = (opcode&0x00F0) >> 4;
+
 	// Fetch two bytes and merge them to get opcode
 	opcode = memory[pc] << 8 | memory[pc + 1];
-	// Move program counter two bytes
-	pc += 2;
 
 	// Decode opcode
 	switch(opcode & 0xF000)
@@ -85,11 +68,17 @@ void Chip8::cycle() {
 		case 0x0000:
 			switch(opcode & 0x000F)
 			{
-				case 0x0000:
+				case 0x0000: // 0x00E0: Clear screen
 					for (int i = 0; i < GFX_SIZE; i++) {
 						gfx[i] = 0;
 					}
+					pc += 2;
 					break;
+
+				case 0x000E: // 0x00EE: Return from subroutine
+					pc = stack[--sp];
+					pc += 2;
+					break; 
 
 				default:
 					printf("Opcode unknown: 0x%X\n", opcode);
@@ -97,9 +86,111 @@ void Chip8::cycle() {
 			}
 			break;
 
-		case 0xA000: //
+		case 0x1000: // 0x1NNN: Jump to address NNN
+			pc = opcode & 0x0FFF;
+			pc += 2;
+			break;
+
+		case 0x2000: // 0x2NNN: Calls subroutine at NNN
+
+		case 0x3000: // 0x3XNN: Skips next instruction if VX = NN
+
+		case 0x4000: // 0x4XNN: Skips next instruction if VX != NN
+
+		case 0x5000: // 0x5XY0: Skips next instruction if VX = VY
+
+		case 0x6000: // 0x6XNN: Sets VX = NN
+
+		case 0x7000: // 0x7XNN: Adds NN to VX
+
+		case 0x8000:
+			switch(opcode & 0x000F)
+			{
+				case 0x0: // 0x8XY0: Sets VY to value of VY
+
+				case 0x1: // 0x8XY2: Sets VX to VX or VY
+
+				case 0x2: // 0x8XY2: Sets VX to VX and VY
+
+				case 0x3: // 0x8XY3: Sets VX to VX xor VY
+
+				case 0x4: // 0x8XY4: Adds VY to VX; VF is 1 when
+				          // there's a carry and 0 if not
+
+				case 0x5: // 0x8XY5: VY subtracted from VX. VF is 
+						  // 0 if there's a borrow and 1 if not
+
+				case 0x6: // 0x8XY6: Shifts VX right by 1. VF is
+						  // least significant bit of VX before shift
+
+				case 0x7: // 0x8XY7: Sets VX to VY minus VX. VF is 0
+						  // if there's a borrow and 1 if not
+
+				case 0xE: // 0x8XY8: Shifts VX left by 1. VF is set to
+						  // most significant bit of VX before shift
+
+				default:
+					printf("Opcode unknown: 0x%X\n", opcode);
+					break;
+			}
+			break;
+
+		case 0x9000: // 0x9XY0: Skips next instruction if VX != VY
+
+		case 0xA000: // 0xANNN: Set I to address NNN
 			I = opcode & 0x0FFF;
 			pc += 2;
+			break;
+
+		case 0xB000: // 0xBNNN: Jumps to address of NNN + V0
+
+		case 0xC000: // 0xCXNN: Sets VX to result of bitwise operationg
+					 // on random number and NN
+
+		case 0xD000: // 0xDXYN: Graphics sprite
+
+		case 0xE000:
+			switch(opcode & 0x00FF)
+			{
+				case 0x9E: // 0xEX9E: Skips next instruction if key
+						   // stored in VX is pressed.
+
+				case 0xA1: // 0xEXA1: Skips next instruction if key
+						   // stored in VX isn't pressed.
+
+				default:
+					printf("Opcode unknown: 0x%X\n", opcode);
+					break;
+			}
+			break;
+
+		case 0xF000:
+			switch(opcode & 0x00FF)
+			{
+				case 0x07: // 0xFX07: Sets VX to delay timer value
+
+				case 0x0A: // 0xFX0A: Key press awaited, and stored in VX
+
+				case 0x15: // 0xFX15: Sets delay timer to VX
+
+				case 0x18: // 0xFX18: Sets sound timer to VX
+
+				case 0x1E: // 0xFX1E: Adds VX to I
+
+				case 0x29: // 0xFX29: Sets I to location of sprite
+
+				case 0x33: // 0xFX33: Stores binary-coded decimal of VX
+
+				case 0x55: // 0xFX55: Stores V0 to VX in memory address
+						   // starting at address I
+
+				case 0x65: // Fills V0 to VX with values from memory
+						   // starting at address I
+
+				default:
+					printf("Opcode unknown: 0x%X\n", opcode);
+					break;
+			}
 			break;
 
 		default:
