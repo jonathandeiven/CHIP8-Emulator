@@ -2,8 +2,8 @@
 #define REGISTER_SIZE 16
 #define STACK_SIZE 16
 #define KEY_SIZE 16
-#define GFX_W 64; //Graphics width
-#define GFX_H 32; //Graphics height
+#define GFX_W 64 //Graphics width
+#define GFX_H 32 //Graphics height
 #define GFX_SIZE GFX_W*GFX_H
 
 class Chip8 {
@@ -14,7 +14,7 @@ class Chip8 {
 	unsigned short I; //Index register
 	unsigned short pc; //Program counter
 
-	unsigned char gfx[64 * 32]; //Graphics
+	unsigned char gfx[GFX_SIZE]; //Graphics
 
 	unsigned char delay_timer;
 	unsigned char sound_timer;
@@ -31,4 +31,4 @@ public:
 
 	Chip8(); //Constructor
 	~Chip8(); //Destructor
-}
+};

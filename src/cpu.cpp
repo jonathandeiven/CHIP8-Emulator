@@ -1,4 +1,5 @@
 #include "cpu.h"
+#include <stdio.h>
 
 // Font Set
 unsigned char fontset[80] =
@@ -68,12 +69,58 @@ void Chip8::initialize() {
 
 // Load the ROM
 void Chip8::load(char* rom) {
-	
+
 }
 
 // Fetch, decode, execute opcode
 void Chip8::cycle() {
+	// Fetch two bytes and merge them to get opcode
+	opcode = memory[pc] << 8 | memory[pc + 1];
+	// Move program counter two bytes
+	pc += 2;
 
+	// Decode opcode
+	switch(opcode & 0xF000)
+	{
+		case 0x0000:
+			switch(opcode & 0x000F)
+			{
+				case 0x0000:
+					for (int i = 0; i < GFX_SIZE; i++) {
+						gfx[i] = 0;
+					}
+					break;
+
+				default:
+					printf("Opcode unknown: 0x%X\n", opcode);
+					break;
+			}
+			break;
+
+		case 0xA000: //
+			I = opcode & 0x0FFF;
+			pc += 2;
+			break;
+
+		default:
+			printf("Opcode unknown: 0x%X\n", opcode);
+			break;
+	}
+
+	// Update delay timer
+	if (delay_timer > 0)
+		--delay_timer;
+
+	// Update sound timer
+	if (sound_timer > 0)
+	{
+		if(sound_timer == 1)
+		{
+			printf("BEEP!\n");
+			// Implement sound here
+		}
+		--sound_timer;
+	}
 }
 
 // Default constructor
