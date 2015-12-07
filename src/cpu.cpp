@@ -1,6 +1,7 @@
 #include "cpu.h"
 #include "fontset.h"
 #include <stdio.h>
+#include <random>
 
 // Init registers and memory
 void Chip8::initialize() {
@@ -46,6 +47,8 @@ void Chip8::initialize() {
 		memory[i] = fontset[i];
 	}
 
+	// Seed the RNG
+	srand (time(NULL));
 }
 
 // Load the ROM
@@ -139,18 +142,42 @@ void Chip8::cycle() {
 
 				case 0x4: // 0x8XY4: Adds VY to VX; VF is 1 when
 						  // there's a carry and 0 if not
+					if ((V[Y] + V[X]) > 0xFF)
+						V[0xF] = 1; // carry
+					else
+						V[0xF] = 0;
+					V[X] += V[Y];
+					break;
 
 				case 0x5: // 0x8XY5: VY subtracted from VX. VF is 
 						  // 0 if there's a borrow and 1 if not
+					if (V[X] > V[Y])
+						V[0xF] = 1;
+					else
+						V[0xF] = 0;
+					V[X] -= V[Y];
+					break;
 
 				case 0x6: // 0x8XY6: Shifts VX right by 1. VF is
 						  // least significant bit of VX before shift
+					V[0xF] = V[X] & 0x1;
+					V[X] = V[X] >> 1;
+					break;
 
 				case 0x7: // 0x8XY7: Sets VX to VY minus VX. VF is 0
 						  // if there's a borrow and 1 if not
+					if (V[Y] > V[X])
+						V[0xF] = 1;
+					else
+						V[0xF] = 0;
+					V[X] = V[Y] - V[X];
+					break;
 
 				case 0xE: // 0x8XY8: Shifts VX left by 1. VF is set to
 						  // most significant bit of VX before shift
+					V[0xF] = V[X] >> 7;
+					V[X] = V[X] << 1;
+					break;
 
 				default:
 					printf("Opcode unknown: 0x%X\n", opcode);
@@ -173,6 +200,8 @@ void Chip8::cycle() {
 
 		case 0xC000: // 0xCXNN: Sets VX to result of bitwise operation
 					 // on random number and NN
+			V[X] = (rand() % 0xFF) & (opcode & 0xFF);
+			break;
 
 		case 0xD000: // 0xDXYN: Graphics sprite
 
@@ -181,9 +210,15 @@ void Chip8::cycle() {
 			{
 				case 0x9E: // 0xEX9E: Skips next instruction if key
 						   // stored in VX is pressed.
+					if(key[V[X]] != 0)
+						pc += 2;
+					break;
 
 				case 0xA1: // 0xEXA1: Skips next instruction if key
 						   // stored in VX isn't pressed.
+					if(key[V[X]] == 0)
+						pc += 2;
+					break;
 
 				default:
 					printf("Opcode unknown: 0x%X\n", opcode);
