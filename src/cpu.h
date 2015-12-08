@@ -15,7 +15,6 @@ class Chip8 {
 	unsigned short pc; //Program counter
 
 	unsigned char gfx[GFX_SIZE]; //Graphics
-	bool drawFlag;
 
 	unsigned char delay_timer;
 	unsigned char sound_timer;
@@ -26,6 +25,8 @@ class Chip8 {
 	unsigned char key[KEY_SIZE];
 
 public:
+	bool drawFlag;
+
 	void initialize();
 	void cycle();
 	void load(const char* rom);

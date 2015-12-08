@@ -90,6 +90,9 @@ void Chip8::cycle() {
 	unsigned char X = (opcode&0x0F00) >> 8;
 	unsigned char Y = (opcode&0x00F0) >> 4;
 
+	// Flag for key press
+	bool key_pressed = false;
+
 	// Fetch two bytes and merge them to get opcode
 	opcode = memory[pc] << 8 | memory[pc + 1];
 
@@ -263,7 +266,6 @@ void Chip8::cycle() {
 					break;
 
 				case 0x0A: // 0xFX0A: Key press awaited, and stored in VX
-					bool key_pressed = false;
 					for (int i = 0; i < KEY_SIZE; i++)
 					{
 						if (key[i] != 0)
@@ -307,14 +309,14 @@ void Chip8::cycle() {
 						   // starting at address I
 					for (int i = 0; i < X; i++)
 						memory[I + i] = V[i];
-					I = I + X + i;
+					I = I + X + 0x1;
 					break;
 
 				case 0x65: // 0xFX65: Fills V0 to VX with values from
 						   // memory starting at address I
 					for (int i = 0; i < X; i++)
 						V[i] = memory[I + i];
-					I = I + X + i;
+					I = I + X + 0x1;
 					break;
 
 				default:
