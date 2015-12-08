@@ -1,7 +1,9 @@
 #include "cpu.h"
 #include "fontset.h"
 #include <stdio.h>
+#include <stdlib.h>
 #include <random>
+#include <iostream>
 
 // Init registers and memory
 void Chip8::initialize() {
@@ -52,8 +54,35 @@ void Chip8::initialize() {
 }
 
 // Load the ROM
-void Chip8::load(char* rom) {
+void Chip8::load(const char* rom) {
+	FILE *program_file;
+	long file_size;
+	size_t read_size;
 
+	// Open ROM into file
+	program_file = fopen(rom, "rb");
+	if (program_file == NULL)
+	{
+		printf("ERROR: Cannot open ROM");
+		exit (EXIT_FAILURE);
+	}
+
+	// Get ROM size
+	fseek(program_file, 0, SEEK_END);
+	file_size = ftell(program_file);
+
+	// Rewind to ROM file start
+	rewind(program_file);
+
+	// Copy ROM to memory
+	read_size = fread(&memory[I+0x200], sizeof(char), file_size, program_file);
+	if ((read_size != file_size) || (file_size > (0x1000 - 0x200)))
+	{
+		printf("ERROR: Cannot load ROM to memory");
+		exit (EXIT_FAILURE);
+	}
+
+	fclose(program_file);
 }
 
 // Fetch, decode, execute opcode

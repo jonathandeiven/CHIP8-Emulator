@@ -11,7 +11,7 @@ class Chip8 {
 	unsigned char memory[MEMORY_SIZE]; 
 	unsigned char V[REGISTER_SIZE]; //Register
 
-	unsigned short I; //Index register
+	unsigned short I;  //Index register
 	unsigned short pc; //Program counter
 
 	unsigned char gfx[GFX_SIZE]; //Graphics
@@ -28,7 +28,7 @@ class Chip8 {
 public:
 	void initialize();
 	void cycle();
-	void load(char* rom);
+	void load(const char* rom);
 
 	Chip8(); //Constructor
 	~Chip8(); //Destructor
