@@ -55,7 +55,6 @@ void Chip8::initialize() {
 // Load the ROM
 void Chip8::load(const char* rom) {
 	FILE *program_file;
-	long file_size;
 	size_t read_size;
 
 	// Open ROM into file
@@ -351,3 +350,52 @@ Chip8::Chip8() {}
 
 // Default destructor
 Chip8::~Chip8() {}
+
+// Dumps contents of memory
+void Chip8::ram_dump() {
+	printf("********************************\n");
+	printf("            RAM DUMP\n\n");
+
+	if (file_size == 0)
+		printf("RAM is empty...\n");
+	else
+	{
+		for (int i = 1; i <= file_size; i++)
+		{
+			printf("%02X ", memory[0x200 + i]);
+			if (i % 11 == 0)
+				printf("\n");
+		}
+	}
+	printf("\n\n********************************\n");
+}
+
+// Dumps contents of CPU register and stack
+void Chip8::cpu_dump() {
+	printf("********************************\n");
+	printf("            CPU DUMP\n\n");
+
+	if (file_size == 0)
+		printf("RAM is empty...\n");
+	else
+	{
+		printf("Program Counter: 0x%hx\n", pc);
+		printf("Index Register:  0x%hx\n", I);
+		printf("Stack Pointer:   0x%hx\n", sp);
+		printf("\nRegister Dump:\n");
+		for (int i = 1; i <= REGISTER_SIZE; i++)
+		{
+			printf("%02X ", V[i]);
+			if (i % 11 == 0)
+				printf("\n");
+		}
+		printf("\nStack Dump:\n");
+		for (int i = 1; i <= sp; i++)
+		{
+			printf("%hx ", stack[i]);
+			if (i % 11 == 0)
+				printf("\n");
+		}
+	}
+	printf("\n\n********************************\n");
+}

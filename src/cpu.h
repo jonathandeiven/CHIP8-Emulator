@@ -24,12 +24,18 @@ class Chip8 {
 
 	unsigned char key[KEY_SIZE];
 
+	long file_size; //Size of loaded RAM
+
 public:
 	bool drawFlag;
 
 	void initialize();
 	void cycle();
 	void load(const char* rom);
+
+	// Debug methods
+	void ram_dump();
+	void cpu_dump();
 
 	Chip8();  //Constructor
 	~Chip8(); //Destructor
