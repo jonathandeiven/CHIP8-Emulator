@@ -30,6 +30,6 @@ public:
 	void cycle();
 	void load(const char* rom);
 
-	Chip8(); //Constructor
+	Chip8();  //Constructor
 	~Chip8(); //Destructor
 };

@@ -3,7 +3,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <random>
-#include <iostream>
 
 // Init registers and memory
 void Chip8::initialize() {
@@ -37,7 +36,7 @@ void Chip8::initialize() {
 	// Clear keys
 	for (int i = 0; i < KEY_SIZE; i++) {
 		key[i] = 0;
-	}	
+	}   
 
 	// Clear memory
 	for (int i = 0; i < MEMORY_SIZE; i++) {
@@ -102,13 +101,13 @@ void Chip8::cycle() {
 		case 0x0000:
 			switch(opcode & 0x000F)
 			{
-				case 0x0000: // 0x00E0: Clear screen
+				case 0x0000: // 0x00E0: Clear screen (CLS)
 					for (int i = 0; i < GFX_SIZE; i++) {
 						gfx[i] = 0;
 					}
 					break;
 
-				case 0x000E: // 0x00EE: Return from subroutine
+				case 0x000E: // 0x00EE: Return from subroutine (RTS)
 					pc = stack[--sp];
 					break; 
 
@@ -150,27 +149,28 @@ void Chip8::cycle() {
 			V[X] += (opcode & 0x00FF);
 			break;
 
+		//Register operations
 		case 0x8000:
 			switch(opcode & 0x000F)
 			{
-				case 0x0: // 0x8XY0: Sets VX to value of VY
+				case 0x0: // 0x8XY0: Sets VX to value of VY (MOV)
 					V[X] = V[Y];
 					break;
 
-				case 0x1: // 0x8XY2: Sets VX to VX or VY
+				case 0x1: // 0x8XY2: Sets VX to VX or VY (OR)
 					V[X] = (V[X] | V[Y]);
 					break;
 
-				case 0x2: // 0x8XY2: Sets VX to VX and VY
+				case 0x2: // 0x8XY2: Sets VX to VX and VY (AND)
 					V[X] = (V[X] & V[Y]);
 					break;
 
-				case 0x3: // 0x8XY3: Sets VX to VX xor VY
+				case 0x3: // 0x8XY3: Sets VX to VX xor VY (XOR)
 					V[X] = (V[X] ^ V[Y]);
 					break;
 
 				case 0x4: // 0x8XY4: Adds VY to VX; VF is 1 when
-						  // there's a carry and 0 if not
+						  // there's a carry and 0 if not (ADD)
 					if ((V[Y] + V[X]) > 0xFF)
 						V[0xF] = 1; // carry
 					else
@@ -179,7 +179,7 @@ void Chip8::cycle() {
 					break;
 
 				case 0x5: // 0x8XY5: VY subtracted from VX. VF is 
-						  // 0 if there's a borrow and 1 if not
+						  // 0 if there's a borrow and 1 if not (SUB)
 					if (V[X] > V[Y])
 						V[0xF] = 1;
 					else
@@ -188,13 +188,13 @@ void Chip8::cycle() {
 					break;
 
 				case 0x6: // 0x8XY6: Shifts VX right by 1. VF is
-						  // least significant bit of VX before shift
+						  // least significant bit of VX before shift (SHR)
 					V[0xF] = V[X] & 0x1;
 					V[X] = V[X] >> 1;
 					break;
 
 				case 0x7: // 0x8XY7: Sets VX to VY minus VX. VF is 0
-						  // if there's a borrow and 1 if not
+						  // if there's a borrow and 1 if not (SUBB)
 					if (V[Y] > V[X])
 						V[0xF] = 1;
 					else
@@ -203,7 +203,7 @@ void Chip8::cycle() {
 					break;
 
 				case 0xE: // 0x8XY8: Shifts VX left by 1. VF is set to
-						  // most significant bit of VX before shift
+						  // most significant bit of VX before shift (SHL)
 					V[0xF] = V[X] >> 7;
 					V[X] = V[X] << 1;
 					break;
@@ -263,6 +263,23 @@ void Chip8::cycle() {
 					break;
 
 				case 0x0A: // 0xFX0A: Key press awaited, and stored in VX
+					bool key_pressed = false;
+					for (int i = 0; i < KEY_SIZE; i++)
+					{
+						if (key[i] != 0)
+						{
+							V[X] = i;
+							key_pressed = true;
+						}
+					}
+
+					// No key pressed
+					if (key_pressed == 0)
+					{
+						pc -= 2;
+						return;
+					}
+					break;
 
 				case 0x15: // 0xFX15: Sets delay timer to VX
 					delay_timer = V[X];
@@ -277,14 +294,28 @@ void Chip8::cycle() {
 					break;
 
 				case 0x29: // 0xFX29: Sets I to location of sprite
+					I = V[X] * 5; // Font is 4x5 bits
+					break;
 
 				case 0x33: // 0xFX33: Stores binary-coded decimal of VX
+					memory[I] = V[X] / 100;
+					memory[I + 1] = (V[X] / 10) % 10;
+					memory[I + 2] = (V[X] % 100) % 10;
+					break;
 
 				case 0x55: // 0xFX55: Stores V0 to VX in memory address
 						   // starting at address I
+					for (int i = 0; i < X; i++)
+						memory[I + i] = V[i];
+					I = I + X + i;
+					break;
 
 				case 0x65: // 0xFX65: Fills V0 to VX with values from
 						   // memory starting at address I
+					for (int i = 0; i < X; i++)
+						V[i] = memory[I + i];
+					I = I + X + i;
+					break;
 
 				default:
 					printf("Opcode unknown: 0x%X\n", opcode);
