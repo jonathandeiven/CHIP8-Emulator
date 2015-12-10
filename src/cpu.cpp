@@ -4,6 +4,12 @@
 #include <stdlib.h>
 #include <random>
 
+// Default constructor
+Chip8::Chip8() {}
+
+// Default destructor
+Chip8::~Chip8() {}
+
 // Init registers and memory
 void Chip8::initialize() {
 	// Reset registers
@@ -86,8 +92,8 @@ void Chip8::load(const char* rom) {
 // Fetch, decode, execute opcode
 void Chip8::cycle() {
 	// 4-bit Register identifiers
-	unsigned char X = (opcode&0x0F00) >> 8;
-	unsigned char Y = (opcode&0x00F0) >> 4;
+	unsigned short X = (opcode&0x0F00) >> 8;
+	unsigned short Y = (opcode&0x00F0) >> 4;
 
 	// Flag for key press
 	bool key_pressed = false;
@@ -107,6 +113,7 @@ void Chip8::cycle() {
 					for (int i = 0; i < GFX_SIZE; i++) {
 						gfx[i] = 0;
 					}
+					drawFlag = true;
 					break;
 
 				case 0x000E: // 0x00EE: Return from subroutine (RTS)
@@ -235,6 +242,9 @@ void Chip8::cycle() {
 			break;
 
 		case 0xD000: // 0xDXYN: Graphics sprite
+			draw_sprite(X, Y, opcode & 0x000F);
+			drawFlag = true;
+			break;
 
 		case 0xE000:
 			switch(opcode & 0x00FF)
@@ -345,11 +355,31 @@ void Chip8::cycle() {
 	}
 }
 
-// Default constructor
-Chip8::Chip8() {}
+// Draws sprite at (V[X], V[Y]) of specified height
+void Chip8::draw_sprite(unsigned short X, unsigned short Y, 
+						unsigned short height) {
+	unsigned short x = V[X]; // x-position of sprite
+	unsigned short y = V[Y]; // y-position of sprite
+	unsigned short pixel;
 
-// Default destructor
-Chip8::~Chip8() {}
+	V[0xF] = 0; // Reset V[F] register
+
+	for (int y_line = 0; y_line < height; y_line++)
+	{
+		pixel = memory[I + y_line]; // Get pixel to draw
+
+		// Each pixel is 8 bits long, so loop through
+		for(int x_col = 0; x_col < 0x08; x_col++)
+		{
+			if((pixel & (0x80 >> x_col)) != 0)
+			{
+				if(gfx[x + x_col + ((y + y_line) * 64)] == 1)
+					V[0xF] = 1; // Collision
+				gfx[x + x_col + ((y + y_line) * 64)] ^= 1;
+			}
+		}
+	}
+}
 
 // Dumps contents of memory
 void Chip8::ram_dump() {
@@ -357,13 +387,13 @@ void Chip8::ram_dump() {
 	printf("            RAM DUMP\n\n");
 
 	if (file_size == 0)
-		printf("RAM is empty...\n");
+		printf("ROM not loaded...\n");
 	else
 	{
-		for (int i = 1; i <= file_size; i++)
+		for (int i = 0; i <= 0x200 + file_size; i++)
 		{
-			printf("%02X ", memory[0x200 + i]);
-			if (i % 11 == 0)
+			printf("%02X ", memory[i]);
+			if ((i + 1) % 11 == 0)
 				printf("\n");
 		}
 	}
@@ -376,24 +406,24 @@ void Chip8::cpu_dump() {
 	printf("            CPU DUMP\n\n");
 
 	if (file_size == 0)
-		printf("RAM is empty...\n");
+		printf("ROM not loaded...\n");
 	else
 	{
 		printf("Program Counter: 0x%hx\n", pc);
 		printf("Index Register:  0x%hx\n", I);
 		printf("Stack Pointer:   0x%hx\n", sp);
 		printf("\nRegister Dump:\n");
-		for (int i = 1; i <= REGISTER_SIZE; i++)
+		for (int i = 0; i < REGISTER_SIZE; i++)
 		{
 			printf("%02X ", V[i]);
-			if (i % 11 == 0)
+			if ((i + 1) % 11 == 0)
 				printf("\n");
 		}
 		printf("\nStack Dump:\n");
-		for (int i = 1; i <= sp; i++)
+		for (int i = 0; i < sp; i++)
 		{
 			printf("%hx ", stack[i]);
-			if (i % 11 == 0)
+			if ((i + 1) % 11 == 0)
 				printf("\n");
 		}
 	}

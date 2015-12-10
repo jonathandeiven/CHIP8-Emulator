@@ -33,6 +33,9 @@ public:
 	void cycle();
 	void load(const char* rom);
 
+	// Sprite draw
+	void draw_sprite(unsigned short X, unsigned short Y, unsigned short height);
+
 	// Debug methods
 	void ram_dump();
 	void cpu_dump();
