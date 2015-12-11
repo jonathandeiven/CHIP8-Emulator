@@ -91,15 +91,16 @@ void Chip8::load(const char* rom) {
 
 // Fetch, decode, execute opcode
 void Chip8::cycle() {
-	// 4-bit Register identifiers
-	unsigned short X = (opcode&0x0F00) >> 8;
-	unsigned short Y = (opcode&0x00F0) >> 4;
 
 	// Flag for key press
 	bool key_pressed = false;
 
 	// Fetch two bytes and merge them to get opcode
 	opcode = memory[pc] << 8 | memory[pc + 1];
+
+	// 4-bit Register identifiers
+	unsigned short X = (opcode&0x0F00) >> 8;
+	unsigned short Y = (opcode&0x00F0) >> 4;
 
 	pc += 2;
 
@@ -348,7 +349,7 @@ void Chip8::cycle() {
 	{
 		if(sound_timer == 1)
 		{
-			printf("BEEP!\n");
+			//printf("BEEP!\n");
 			// Implement sound here
 		}
 		--sound_timer;
