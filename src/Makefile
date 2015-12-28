@@ -1,11 +1,11 @@
 CXX = g++
-CXXFLAGS = -Wall -MMD
+CXXFLAGS = -std=c++11 -Wall -MMD
 EXEC = chip8-emulator
 OBJECTS = cpu.o main.o
 DEPENDS = ${OBJECTS:.o=.d}
-
+INCLUDES = ../include
 ${EXEC}: ${OBJECTS}
-	${CXX} ${CXXFLAGS} ${OBJECTS} -o ${EXEC}
+	${CXX} ${CXXFLAGS} ${OBJECTS} -I ${INCLUDES} -o ${EXEC}
 
 -include ${DEPENDS}
 
