@@ -23,11 +23,11 @@ class Chip8 {
 	unsigned short stack[STACK_SIZE];
 	unsigned short sp; //Stack pointer
 
-	unsigned char key[KEY_SIZE];
-
 	long file_size; //Size of loaded RAM
 
 public:
+	unsigned char key[KEY_SIZE];
+
 	unsigned char gfx[GFX_SIZE]; //Graphics
 	bool drawFlag;
 

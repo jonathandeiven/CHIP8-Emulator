@@ -37,5 +37,5 @@ void SDLWindow::create_window(const char *scr_title, int scr_width,
 	}
 
 	//Get window surface
-    screenSurface = SDL_GetWindowSurface( window );
+	screenSurface = SDL_GetWindowSurface( window );
 }

@@ -1,8 +1,9 @@
 #include <iostream>
 #include <thread>
 #include <SDL.h>
-#include "window.h"
 #include "cpu.h"
+#include "keyboard.h"
+#include "window.h"
 
 //Screen dimensions
 const int SCREEN_WIDTH = 960;
@@ -13,7 +14,7 @@ Chip8 chip8;
 SDLWindow sdl;
 
 //Forward declarations
-void drawPixels();
+void draw_pixels();
 
 int main(int argc, char **argv) {
 
@@ -35,34 +36,34 @@ int main(int argc, char **argv) {
 	//Emulation loop
 	while(running)
 	{
-
-		//Handle events on queue
-		while( SDL_PollEvent( &e ) != 0 )
-		{
-			//User requests quit
-			if( e.type == SDL_QUIT )
-			{
-				running = false;
-			}
-		}
-
 		// Emulate one cycle
 		chip8.cycle();
-		std::this_thread::sleep_for(std::chrono::milliseconds(17)); // 60Hz CPU
+		//std::this_thread::sleep_for(std::chrono::milliseconds(17)); // 60Hz CPU
 
 		// Update screen
 		if (chip8.drawFlag){
-			drawPixels();
+			draw_pixels();
 			SDL_UpdateWindowSurface(sdl.window);
 		}
 
-		// Store key presses
-		// setKeys();
+		//Handle events on queue
+		while(SDL_PollEvent(&e) != 0)
+		{
+			//User requests quit
+			if( e.type == SDL_QUIT || e.key.keysym.sym == SDLK_ESCAPE)
+				running = false;
+			//Key down
+			else if (e.type == SDL_KEYDOWN)
+				chip8.key[key_map(e.key.keysym.sym)] = 1;
+			//Key up
+			else if (e.type == SDL_KEYUP)
+				chip8.key[key_map(e.key.keysym.sym)] = 0;
+		}
 	}
 }
 
 //Draw the pixels based on data in CPU's GFX stack
-void drawPixels() {
+void draw_pixels() {
 	SDL_Rect rect;
 	int scale = SCREEN_WIDTH / GFX_W;
 
@@ -86,3 +87,4 @@ void drawPixels() {
 		}
 	}
 }
+
