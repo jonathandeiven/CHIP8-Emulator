@@ -5,10 +5,15 @@
 #include "cpu.h"
 
 //Screen dimensions
-const int SCREEN_WIDTH = 640;
+const int SCREEN_WIDTH = 960;
 const int SCREEN_HEIGHT = 480;
 
+//Classes
 Chip8 chip8;
+SDLWindow sdl;
+
+//Forward declarations
+void drawPixels();
 
 int main(int argc, char **argv) {
 
@@ -19,52 +24,65 @@ int main(int argc, char **argv) {
 		exit (EXIT_FAILURE);
 	}
 
-	SDLWindow sdl;
-	bool quit = false;
+	bool running = true;
 	SDL_Event e;
 
 	sdl.create_window("CHIP-8 Emulator", SCREEN_WIDTH, SCREEN_HEIGHT);
 
-	sdl.gHelloWorld = SDL_LoadBMP( "/Users/jonathan/Documents/Projects/CHIP8-Emulator/src/hello_world.bmp" );
-	if( sdl.gHelloWorld == NULL )
-	{
-		printf( "Unable to load image %s! SDL Error: %s\n", "02_getting_an_image_on_the_screen/hello_world.bmp", SDL_GetError() );
-		return 1;
-	}
+	chip8.initialize();
+	chip8.load(argv[1]);
 
-	while (!quit)
+	//Emulation loop
+	while(running)
 	{
+
 		//Handle events on queue
 		while( SDL_PollEvent( &e ) != 0 )
 		{
 			//User requests quit
 			if( e.type == SDL_QUIT )
 			{
-				quit = true;
+				running = false;
 			}
 		}
 
-		//Apply the image
-		SDL_BlitSurface( sdl.gHelloWorld, NULL, sdl.screenSurface, NULL );
-		SDL_UpdateWindowSurface( sdl.window );
-	}
-
-	/*chip8.initialize();
-	chip8.load(argv[1]);
-
-	while(true)
-	{
 		// Emulate one cycle
 		chip8.cycle();
 		std::this_thread::sleep_for(std::chrono::milliseconds(17)); // 60Hz CPU
 
 		// Update screen
-		//if (chip8.drawFlag)
-			//drawGraphics();
+		if (chip8.drawFlag){
+			drawPixels();
+			SDL_UpdateWindowSurface(sdl.window);
+		}
 
 		// Store key presses
 		// setKeys();
-	}*/
+	}
+}
 
-	return 0;
+//Draw the pixels based on data in CPU's GFX stack
+void drawPixels() {
+	SDL_Rect rect;
+	int scale = SCREEN_WIDTH / GFX_W;
+
+	//Loop through and draw each pixel
+	for (int x = 0; x < SCREEN_WIDTH; x++) {
+		for (int y = 0; y < SCREEN_HEIGHT; y++) {
+			rect.x = x * scale;
+			rect.y = y * scale;
+			rect.w = scale;
+			rect.h = scale;
+
+			if (chip8.gfx[x + (y * 64)] == 0) {
+				//Draw black pixel
+				SDL_FillRect(sdl.screenSurface, &rect, 
+					SDL_MapRGB(sdl.screenSurface->format, 0, 0, 0));
+			} else {
+				//Draw white pixel
+				SDL_FillRect(sdl.screenSurface, &rect, 
+					SDL_MapRGB(sdl.screenSurface->format, 255, 255, 255));
+			}
+		}
+	}
 }

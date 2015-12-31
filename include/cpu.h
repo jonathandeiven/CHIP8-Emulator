@@ -1,3 +1,6 @@
+#ifndef CPU_H
+#define CPU_H
+
 #define MEMORY_SIZE 4096 //4k memory
 #define REGISTER_SIZE 16
 #define STACK_SIZE 16
@@ -14,8 +17,6 @@ class Chip8 {
 	unsigned short I;  //Index register
 	unsigned short pc; //Program counter
 
-	unsigned char gfx[GFX_SIZE]; //Graphics
-
 	unsigned char delay_timer;
 	unsigned char sound_timer;
 
@@ -27,6 +28,7 @@ class Chip8 {
 	long file_size; //Size of loaded RAM
 
 public:
+	unsigned char gfx[GFX_SIZE]; //Graphics
 	bool drawFlag;
 
 	void initialize();
@@ -43,3 +45,5 @@ public:
 	Chip8();  //Constructor
 	~Chip8(); //Destructor
 };
+
+#endif

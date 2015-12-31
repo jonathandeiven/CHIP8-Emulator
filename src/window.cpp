@@ -13,9 +13,6 @@ SDLWindow::SDLWindow() {
 
 //SDL cleanup
 SDLWindow::~SDLWindow() {
-	SDL_FreeSurface( gHelloWorld );
-	gHelloWorld = NULL;
-
 	//Destroy window
 	SDL_DestroyWindow( window );
 	window = NULL;
@@ -40,5 +37,5 @@ void SDLWindow::create_window(const char *scr_title, int scr_width,
 	}
 
 	//Get window surface
-	screenSurface = SDL_GetWindowSurface( window );
+    screenSurface = SDL_GetWindowSurface( window );
 }
